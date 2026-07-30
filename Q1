@@ -1,0 +1,165 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.List;
+import java.util.Queue;
+import java.util.StringTokenizer;
+
+public class Main {
+    static class Path {
+        int u;
+        int parent;
+        int len;
+        BitSet visited;
+
+        Path(int u, int parent, int len, BitSet visited) {
+            this.u = u;
+            this.parent = parent;
+            this.len = len;
+            this.visited = visited;
+        }
+    }
+
+    // Maximum number of distinct simple paths retained per (vertex, parity) state
+    private static final int K = 40;
+
+    public static void main(String[] args) throws IOException {
+        FastScanner sc = new FastScanner();
+        PrintWriter out = new PrintWriter(System.out);
+
+        int t = sc.nextInt();
+        while (t-- > 0) {
+            solve(sc, out);
+        }
+
+        out.flush();
+    }
+
+    private static void solve(FastScanner sc, PrintWriter out) throws IOException {
+        int n = sc.nextInt();
+        int m = sc.nextInt();
+
+        List<Integer>[] adj = new ArrayList[n + 1];
+        for (int i = 1; i <= n; i++) {
+            adj[i] = new ArrayList<>();
+        }
+
+        for (int i = 0; i < m; i++) {
+            int u = sc.nextInt();
+            int v = sc.nextInt();
+            adj[u].add(v);
+            adj[v].add(u);
+        }
+
+        List<Path> allPaths = new ArrayList<>();
+        
+        // statePaths[u][p] stores indices of paths that reached vertex u with length parity p
+        List<Integer>[][] statePaths = new ArrayList[n + 1][2];
+        for (int i = 1; i <= n; i++) {
+            statePaths[i][0] = new ArrayList<>();
+            statePaths[i][1] = new ArrayList<>();
+        }
+
+        Queue<Integer> q = new ArrayDeque<>();
+
+        // Initialize starting path at vertex 1
+        BitSet startVisited = new BitSet(n + 1);
+        startVisited.set(1);
+        Path start = new Path(1, -1, 0, startVisited);
+
+        allPaths.add(start);
+        statePaths[1][0].add(0);
+        q.add(0);
+
+        int foundIdx = -1;
+
+        while (!q.isEmpty()) {
+            int currIdx = q.poll();
+            Path curr = allPaths.get(currIdx);
+
+            // Reached destination vertex n with an even path length
+            if (curr.u == n && curr.len % 2 == 0) {
+                foundIdx = currIdx;
+                break;
+            }
+
+            int u = curr.u;
+            int nextLen = curr.len + 1;
+            int nextP = nextLen % 2;
+
+            for (int v : adj[u]) {
+                if (!curr.visited.get(v)) {
+                    // Check if current path is dominated by an existing path at (v, nextP)
+                    boolean dominated = false;
+                    for (int idx : statePaths[v][nextP]) {
+                        BitSet prevVisited = allPaths.get(idx).visited;
+                        
+                        // Check if prevVisited is a subset of curr.visited
+                        BitSet temp = (BitSet) prevVisited.clone();
+                        temp.andNot(curr.visited);
+                        if (temp.isEmpty()) {
+                            dominated = true;
+                            break;
+                        }
+                    }
+
+                    if (dominated) continue;
+
+                    if (statePaths[v][nextP].size() < K) {
+                        int newIdx = allPaths.size();
+                        BitSet nextVisited = (BitSet) curr.visited.clone();
+                        nextVisited.set(v);
+
+                        Path nextPath = new Path(v, currIdx, nextLen, nextVisited);
+                        allPaths.add(nextPath);
+                        statePaths[v][nextP].add(newIdx);
+                        q.add(newIdx);
+                    }
+                }
+            }
+        }
+
+        if (foundIdx == -1) {
+            out.println(-1);
+        } else {
+            List<Integer> pathNodes = new ArrayList<>();
+            int curr = foundIdx;
+            while (curr != -1) {
+                pathNodes.add(allPaths.get(curr).u);
+                curr = allPaths.get(curr).parent;
+            }
+            Collections.reverse(pathNodes);
+
+            out.println(allPaths.get(foundIdx).len);
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < pathNodes.size(); i++) {
+                sb.append(pathNodes.get(i)).append(i == pathNodes.size() - 1 ? "" : " ");
+            }
+            out.println(sb.toString());
+        }
+    }
+
+    // Fast I/O helper
+    static class FastScanner {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st;
+
+        String next() throws IOException {
+            while (st == null || !st.hasMoreTokens()) {
+                String line = br.readLine();
+                if (line == null) return null;
+                st = new StringTokenizer(line);
+            }
+            return st.nextToken();
+        }
+
+        int nextInt() throws IOException {
+            return Integer.parseInt(next());
+        }
+    }
+}
