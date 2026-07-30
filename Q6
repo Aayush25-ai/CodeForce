@@ -1,0 +1,47 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
+import java.util.StringTokenizer;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.out));
+        StringTokenizer st;
+
+        String line = br.readLine();
+        if (line == null) return;
+        int t = Integer.parseInt(line.trim());
+
+        StringBuilder sb = new StringBuilder();
+
+        while (t-- > 0) {
+            st = new StringTokenizer(br.readLine());
+            int k = Integer.parseInt(st.nextToken());
+
+            st = new StringTokenizer(br.readLine());
+            int countGe3 = 0;
+            int countGe2 = 0;
+
+            for (int i = 0; i < k; i++) {
+                long c = Long.parseLong(st.nextToken());
+                if (c >= 3) {
+                    countGe3++;
+                }
+                if (c >= 2) {
+                    countGe2++;
+                }
+            }
+
+            // Condition for valid string construction:
+            // 1. Any single character has count >= 3 (e.g., AAA...)
+            // 2. At least two distinct characters have count >= 2 (e.g., ABAB...)
+            if (countGe3 > 0 || countGe2 >= 2) {
+                sb.append("YES\n");
+            } else {
+                sb.append("NO\n");
+            }
+        }
+
+        System.out.print(sb);
+    }
+}
