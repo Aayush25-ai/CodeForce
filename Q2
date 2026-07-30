@@ -1,0 +1,85 @@
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.StringTokenizer;
+
+public class Main {
+
+    static class Element implements Comparable<Element> {
+        int val;
+        int idx;
+
+        Element(int val, int idx) {
+            this.val = val;
+            this.idx = idx;
+        }
+
+        @Override
+        public int compareTo(Element o) {
+            if (this.val != o.val) {
+                return Integer.compare(this.val, o.val);
+            }
+            // Maintain original order for duplicate values
+            return Integer.compare(this.idx, o.idx);
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        FastScanner sc = new FastScanner();
+        PrintWriter out = new PrintWriter(System.out);
+
+        int t = sc.nextInt();
+        while (t-- > 0) {
+            solve(sc, out);
+        }
+
+        out.flush();
+    }
+
+    private static void solve(FastScanner sc, PrintWriter out) throws IOException {
+        int n = sc.nextInt();
+        int q = sc.nextInt(); // q = 0 in the easy version
+
+        Element[] a = new Element[n];
+        for (int i = 0; i < n; i++) {
+            a[i] = new Element(sc.nextInt(), i);
+        }
+
+        // Sort elements ascending by value (and by original index for ties)
+        Arrays.sort(a);
+
+        int maxXor = 0;
+        for (int target = 0; target < n; target++) {
+            int orig = a[target].idx;
+            maxXor = Math.max(maxXor, orig ^ target);
+        }
+
+        if (maxXor == 0) {
+            out.println(0);
+        } else {
+            // Integer.highestOneBit(x) computes 2^(floor(log2(x)))
+            out.println(Integer.highestOneBit(maxXor));
+        }
+    }
+
+    // Fast I/O helper class
+    static class FastScanner {
+        BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+        StringTokenizer st;
+
+        String next() throws IOException {
+            while (st == null || !st.hasMoreTokens()) {
+                String line = br.readLine();
+                if (line == null) return null;
+                st = new StringTokenizer(line);
+            }
+            return st.nextToken();
+        }
+
+        int nextInt() throws IOException {
+            return Integer.parseInt(next());
+        }
+    }
+}
